@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .calc-button {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .calc-button:active {
+            transform: scale(0.92);
+            filter: brightness(1.2);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .light-mode {
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        /* 스크롤바 숨기기 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="light-mode flex items-center justify-center min-h-screen p-4" id="body">
+
+    <div class="w-full max-w-md bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden relative transition-colors duration-300" id="calc-container">
+        <!-- 테마 토글 및 기록 버튼 -->
+        <div class="flex justify-between p-6 pb-2">
+            <button onclick="toggleTheme()" class="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                <i id="theme-icon" class="fas fa-moon text-xl text-slate-500"></i>
+            </button>
+            <button onclick="toggleHistory()" class="p-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                <i class="fas fa-history text-xl text-slate-500"></i>
+            </button>
+        </div>
+
+        <!-- 디스플레이 영역 -->
+        <div class="px-8 py-4 text-right">
+            <div id="prev-operation" class="text-slate-400 dark:text-slate-500 text-lg h-7 overflow-hidden whitespace-nowrap"></div>
+            <div id="display" class="text-5xl font-light mt-2 overflow-x-auto no-scrollbar whitespace-nowrap">0</div>
+        </div>
+
+        <!-- 버튼 패드 -->
+        <div class="grid grid-cols-4 gap-4 p-8 pt-4">
+            <!-- 첫 번째 줄 -->
+            <button onclick="clearAll()" class="calc-button bg-red-100 dark:bg-red-900/30 text-red-500 font-semibold p-5 rounded-3xl text-xl">AC</button>
+            <button onclick="deleteLast()" class="calc-button bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 p-5 rounded-3xl text-xl"><i class="fas fa-backspace"></i></button>
+            <button onclick="appendOperator('%')" class="calc-button bg-slate-100 dark:bg-slate-700 text-indigo-500 p-5 rounded-3xl text-xl">%</button>
+            <button onclick="appendOperator('/')" class="calc-button bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-5 rounded-3xl text-xl">÷</button>
+
+            <!-- 숫자 및 연산자 -->
+            <button onclick="appendNumber('7')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">7</button>
+            <button onclick="appendNumber('8')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">8</button>
+            <button onclick="appendNumber('9')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">9</button>
+            <button onclick="appendOperator('*')" class="calc-button bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-5 rounded-3xl text-xl">×</button>
+
+            <button onclick="appendNumber('4')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">4</button>
+            <button onclick="appendNumber('5')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">5</button>
+            <button onclick="appendNumber('6')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">6</button>
+            <button onclick="appendOperator('-')" class="calc-button bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-5 rounded-3xl text-xl">−</button>
+
+            <button onclick="appendNumber('1')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">1</button>
+            <button onclick="appendNumber('2')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">2</button>
+            <button onclick="appendNumber('3')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">3</button>
+            <button onclick="appendOperator('+')" class="calc-button bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-5 rounded-3xl text-xl">+</button>
+
+            <button onclick="appendNumber('0')" class="calc-button col-span-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">0</button>
+            <button onclick="appendNumber('.')" class="calc-button bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-5 rounded-3xl text-2xl font-normal">.</button>
+            <button onclick="calculate()" class="calc-button bg-indigo-600 text-white p-5 rounded-3xl text-2xl font-semibold shadow-lg shadow-indigo-200 dark:shadow-none">=</button>
+        </div>
+
+        <!-- 연산 기록 패널 -->
+        <div id="history-panel" class="absolute inset-0 bg-white dark:bg-slate-800 transform translate-y-full transition-transform duration-300 ease-in-out z-10 flex flex-col">
+            <div class="flex items-center justify-between p-6 border-b dark:border-slate-700">
+                <h2 class="text-xl font-semibold">연산 기록</h2>
+                <button onclick="toggleHistory()" class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="history-list" class="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar">
+                <p class="text-slate-400 text-center mt-10">기록이 없습니다.</p>
+            </div>
+            <div class="p-6 border-t dark:border-slate-700">
+                <button onclick="clearHistory()" class="w-full py-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition-colors">전체 삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        let previousInput = '';
+        let operator = null;
+        let shouldResetDisplay = false;
+        let history = JSON.parse(localStorage.getItem('calc-history')) || [];
+
+        const display = document.getElementById('display');
+        const prevOpDisplay = document.getElementById('prev-operation');
+        const body = document.getElementById('body');
+        const themeIcon = document.getElementById('theme-icon');
+        const historyList = document.getElementById('history-list');
+        const historyPanel = document.getElementById('history-panel');
+
+        function updateDisplay() {
+            display.innerText = formatNumber(currentInput);
+        }
+
+        function formatNumber(num) {
+            if (num === 'Error') return num;
+            const parts = num.toString().split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return parts.join('.');
+        }
+
+        function appendNumber(number) {
+            if (currentInput === '0' || shouldResetDisplay) {
+                currentInput = number;
+                shouldResetDisplay = false;
+            } else {
+                if (number === '.' && currentInput.includes('.')) return;
+                currentInput += number;
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (operator !== null) {
+                calculate();
+            }
+            previousInput = currentInput;
+            operator = op;
+            shouldResetDisplay = true;
+            prevOpDisplay.innerText = `${formatNumber(previousInput)} ${getOpChar(op)}`;
+        }
+
+        function getOpChar(op) {
+            const chars = { '+': '+', '-': '−', '*': '×', '/': '÷', '%': '%' };
+            return chars[op] || op;
+        }
+
+        function calculate() {
+            if (operator === null || shouldResetDisplay) return;
+
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            switch (operator) {
+                case '+': result = prev + current; break;
+                case '-': result = prev - current; break;
+                case '*': result = prev * current; break;
+                case '/': 
+                    result = current === 0 ? 'Error' : prev / current;
+                    break;
+                case '%': result = prev % current; break;
+                default: return;
+            }
+
+            const fullOp = `${formatNumber(previousInput)} ${getOpChar(operator)} ${formatNumber(currentInput)} =`;
+            prevOpDisplay.innerText = fullOp;
+            
+            // 기록 저장
+            if (result !== 'Error') {
+                addToHistory(fullOp, formatNumber(result));
+            }
+
+            currentInput = result.toString();
+            operator = null;
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        function clearAll() {
+            currentInput = '0';
+            previousInput = '';
+            operator = null;
+            shouldResetDisplay = false;
+            prevOpDisplay.innerText = '';
+            updateDisplay();
+        }
+
+        function deleteLast() {
+            if (shouldResetDisplay) return;
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        // 테마 관리
+        function toggleTheme() {
+            if (body.classList.contains('light-mode')) {
+                body.classList.replace('light-mode', 'dark-mode');
+                document.getElementById('calc-container').classList.add('dark');
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+            } else {
+                body.classList.replace('dark-mode', 'light-mode');
+                document.getElementById('calc-container').classList.remove('dark');
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+            }
+        }
+
+        // 기록 관리
+        function toggleHistory() {
+            historyPanel.classList.toggle('translate-y-full');
+            renderHistory();
+        }
+
+        function addToHistory(op, res) {
+            history.unshift({ op, res });
+            if (history.length > 20) history.pop();
+            localStorage.setItem('calc-history', JSON.stringify(history));
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="text-slate-400 text-center mt-10">기록이 없습니다.</p>';
+                return;
+            }
+            historyList.innerHTML = history.map((item, index) => `
+                <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-2xl">
+                    <div class="text-slate-400 text-sm mb-1">${item.op}</div>
+                    <div class="text-xl font-semibold">${item.res}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            history = [];
+            localStorage.removeItem('calc-history');
+            renderHistory();
+        }
+
+        // 키보드 지원
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= 0 && e.key <= 9) appendNumber(e.key);
+            if (e.key === '.') appendNumber('.');
+            if (e.key === '+') appendOperator('+');
+            if (e.key === '-') appendOperator('-');
+            if (e.key === '*') appendOperator('*');
+            if (e.key === '/') appendOperator('/');
+            if (e.key === 'Enter' || e.key === '=') calculate();
+            if (e.key === 'Escape') clearAll();
+            if (e.key === 'Backspace') deleteLast();
+        });
+
+        window.onload = updateDisplay;
+    </script>
+</body>
+</html>
